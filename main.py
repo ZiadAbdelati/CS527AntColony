@@ -11,28 +11,27 @@ from Colony import Colony
 def make_players(num_extra_defenders=0):
     """7 attackers vs 4+ defenders on a 100x100 pitch, goal at (100,50).
 
-    Note on offside: SoccerGraph.is_offside uses defenders_sorted[0] in ascending
-    order, picking the defender furthest from goal as the offside line. Defenders
-    are placed at x>=75 so this doesn't block forward passes to our attackers.
-    (Suggestion for group: index should probably be [-2] for second-to-last from
-    goal line, matching real offside rules.)
+    Striker is placed within 25 units of goal so _can_shoot passes; offside line
+    is set by the second-to-last defender from goal (CBs at x=88), so attackers
+    at x<=80 stay onside.
     """
     attackers = [
         Player(0, 20, 50, "offense"),   # deep midfielder / ball start
-        Player(1, 45, 20, "offense"),   # left midfielder
-        Player(2, 45, 80, "offense"),   # right midfielder
-        Player(3, 65, 50, "offense"),   # attacking midfielder
-        Player(4, 60, 25, "offense"),   # left forward
-        Player(5, 60, 75, "offense"),   # right forward
-        Player(6, 70, 50, "offense"),   # striker
+        Player(1, 40, 25, "offense"),   # left midfielder
+        Player(2, 40, 75, "offense"),   # right midfielder
+        Player(3, 60, 35, "offense"),   # left forward
+        Player(4, 60, 65, "offense"),   # right forward
+        Player(5, 75, 50, "offense"),   # attacking midfielder
+        Player(6, 80, 50, "offense"),   # striker (within shoot range)
     ]
     defenders = [
         Player(7, 97, 50, "defense"),   # goalie
-        Player(8, 85, 35, "defense"),   # CB left
-        Player(9, 85, 65, "defense"),   # CB right
-        Player(10, 75, 50, "defense"),  # defensive mid
+        Player(8, 88, 38, "defense"),   # CB left
+        Player(9, 88, 62, "defense"),   # CB right
+        Player(10, 70, 50, "defense"),  # defensive mid (high press)
     ]
-    extra_positions = [(72, 30), (72, 70), (78, 50), (76, 40), (76, 60)]
+    # extra defenders placed in midfield to add pressure on passing lanes
+    extra_positions = [(55, 30), (55, 70), (45, 50), (65, 40), (65, 60)]
     for i in range(num_extra_defenders):
         x, y = extra_positions[i % len(extra_positions)]
         defenders.append(Player(11 + i, x, y, "defense"))
@@ -96,7 +95,7 @@ def plot_convergence(histories, labels, title="Convergence", save_as=None):
 
 # ── Helper: run one colony and return history ────────────────────────────────
 
-def run_colony(players, num_ants=5, num_iterations=100, alpha=1.0, beta=2.0, seed=42):
+def run_colony(players, num_ants=1, num_iterations=100, alpha=1.0, beta=2.0, seed=42):
     random.seed(seed)
     np.random.seed(seed)
     graph = Graph(players)
