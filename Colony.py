@@ -12,12 +12,15 @@ DEFENDER_BLOCK_RADIUS = 8.0 # how close a defender has to be to block a shot
  
  
 class Colony:
-    def __init__(self, graph, num_ants=10, num_iterations=50, alpha=1.0, beta=2.0):
+    def __init__(self, graph, num_ants=10, num_iterations=50, alpha=1.0, beta=2.0,
+                 start_player_id=None, evaporation_rate=EVAPORATION_RATE):
         self.graph = graph
         self.num_ants = num_ants
         self.num_iterations = num_iterations
         self.alpha = alpha
         self.beta = beta
+        self.start_player_id = start_player_id  # if set, all ants start from this player
+        self.evaporation_rate = evaporation_rate
  
         # Pheromone matrix indexed by player id
         # all edges start at INITIAL_PHEROMONE
@@ -33,6 +36,8 @@ class Colony:
         self.best_path = None
         self.best_score = -1.0  # xG of best path found so far
         self.history = []  # best_score after each iteration
+        self.mean_history = []      # avg xG across ants in each iteration
+        self.diversity_history = [] # number of unique paths in each iteration
  
     # Scoring / shot logic
     def _can_shoot(self, player):
@@ -77,7 +82,7 @@ class Colony:
             for j in self.all_ids:
                 self.pheromone[i][j] = max(
                     0.01,  # floor so edges never become completely dead
-                    self.pheromone[i][j] * (1 - EVAPORATION_RATE)
+                    self.pheromone[i][j] * (1 - self.evaporation_rate)
                 )
  
     def _deposit(self, path, xg):
@@ -116,8 +121,11 @@ class Colony:
             iteration_scores = []
  
             for _ in range(self.num_ants):
-                # Each ant starts from a random attacker
-                start = random.choice(attackers)
+                # Each ant starts from start_player_id if set, else random attacker
+                if self.start_player_id is not None:
+                    start = next(p for p in attackers if p.id == self.start_player_id)
+                else:
+                    start = random.choice(attackers)
  
                 ant = Ant(
                     graph=self.graph,
@@ -142,6 +150,11 @@ class Colony:
                     self.best_path = path
  
             self.history.append(self.best_score)
+            self.mean_history.append(
+                float(np.mean(iteration_scores)) if iteration_scores else 0.0
+            )
+            unique_paths = {tuple(p.id for p in path) for path in iteration_paths}
+            self.diversity_history.append(len(unique_paths))
 
             # Evaporate first, then reward good paths
             self._evaporate()
