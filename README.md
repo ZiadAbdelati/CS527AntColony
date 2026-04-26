@@ -15,13 +15,15 @@ We model a soccer possession as a search problem:
 Over time, the system learns which passing sequences are most likely to lead to high-quality shots.
 
 ## Project Structure
+```
 .
 ├── SoccerGraph.py   # player representation + geometry + xG model
 ├── Ant.py           # ant traversal + decision-making (passing + shooting)
 ├── Colony.py        # ACO loop, pheromone updates, evaluation
 ├── Test.py          # run experiments
+```
 
-##How It Works
+## How It Works
 ### 1. Initialization
    - Players are placed on a 2D field
    - Pheromone levels are initialized between all players
@@ -47,5 +49,5 @@ Over time, the system learns which passing sequences are most likely to lead to 
 - Learn heuristic weights instead of hand-tuning
 
 **How to Run**
-python main.py
+```python main.py```
 
