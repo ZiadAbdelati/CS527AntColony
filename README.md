@@ -2,7 +2,7 @@ This project models offensive decision-making in soccer using Ant Colony Optimiz
 
 The system learns which passing paths are most effective based on expected goals (xG), while accounting for defensive pressure and offside constraints. 
 
-**Key Idea**
+## Key Idea
 We model a soccer possession as a search problem: 
 - Each ant simulates a sequence of passes between attacking players
 - Decisions are guided by:
@@ -14,34 +14,34 @@ We model a soccer possession as a search problem:
 
 Over time, the system learns which passing sequences are most likely to lead to high-quality shots.
 
-**Project Structure**
+## Project Structure
 .
 ├── SoccerGraph.py   # player representation + geometry + xG model
 ├── Ant.py           # ant traversal + decision-making (passing + shooting)
 ├── Colony.py        # ACO loop, pheromone updates, evaluation
 ├── Test.py          # run experiments
 
-**How It Works**
-1. Initialization
+##How It Works
+### 1. Initialization
    - Players are placed on a 2D field
    - Pheromone levels are initialized between all players
-2. Simulation Loop
+### 2. Simulation Loop
    - Ants generate passing sequences
    - Each sequence ends in shot attempt
    - The shot is scored using xG
    - Pheromones updated based on success
-3. Learning
+### 3. Learning
    - Better sequences -> more pheromone
    - Poor sequences -> fade over time (evaporate)
 
-**Core Components**
+##Core Components
 - Ant Colony Optimization (ACO): learns effective passing paths
 - Spatial Heuristics: incorporates distance, goal progression, and pressure
 - Offside Rule: enforces realistic passing constraints
 - xG Model: estimates shot quality based on distance and defensive pressure
 - Stochastic Shooting: players shoot probabilistically based on xG
 
-**Possible Extensions**
+##Possible Extensions
 - Add shot angle
 - Model defender movement
 - Learn heuristic weights instead of hand-tuning
