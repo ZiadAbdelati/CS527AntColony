@@ -20,7 +20,7 @@ Over time, the system learns which passing sequences are most likely to lead to 
 ├── SoccerGraph.py   # player representation + geometry + xG model
 ├── Ant.py           # ant traversal + decision-making (passing + shooting)
 ├── Colony.py        # ACO loop, pheromone updates, evaluation
-├── Test.py          # run experiments
+├── main.py          # run experiments
 ```
 
 ## How It Works
@@ -36,18 +36,18 @@ Over time, the system learns which passing sequences are most likely to lead to 
    - Better sequences -> more pheromone
    - Poor sequences -> fade over time (evaporate)
 
-##Core Components
+## Core Components
 - Ant Colony Optimization (ACO): learns effective passing paths
 - Spatial Heuristics: incorporates distance, goal progression, and pressure
 - Offside Rule: enforces realistic passing constraints
 - xG Model: estimates shot quality based on distance and defensive pressure
 - Stochastic Shooting: players shoot probabilistically based on xG
 
-##Possible Extensions
+## Possible Extensions
 - Add shot angle
 - Model defender movement
 - Learn heuristic weights instead of hand-tuning
 
-**How to Run**
+## How to Run
 ```python main.py```
 
