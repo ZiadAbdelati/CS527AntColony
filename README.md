@@ -45,7 +45,7 @@ Over time, the system learns which passing sequences are most likely to lead to 
 
 ## Possible Extensions
 - Add shot angle
-- Model defender movement
+- Model attacker movement
 - Learn heuristic weights instead of hand-tuning
 
 ## How to Run
