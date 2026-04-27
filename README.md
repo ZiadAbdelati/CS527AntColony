@@ -21,6 +21,7 @@ Over time, the system learns which passing sequences are most likely to lead to 
 ├── Ant.py           # ant traversal + decision-making (passing + shooting)
 ├── Colony.py        # ACO loop, pheromone updates, evaluation
 ├── main.py          # run experiments
+├── animation.html   # visual simulation with parameter sliders
 ```
 
 ## How It Works
