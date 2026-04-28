@@ -91,7 +91,7 @@
     <div class="panel">
       <div class="panel-label">Match</div>
       <div class="matchup" id="matchup">— vs <span>—</span></div>
-      <div class="stat-row"><span class="stat-label">Best xG</span><span class="stat-val" id="bestXg">—</span></div>
+      <div class="stat-row"><span class="stat-label">Mean xG</span><span class="stat-val" id="meanXg">—</span></div>
       <div class="stat-row"><span class="stat-label">Iteration</span><span class="stat-val small" id="iterNum">0 / 0</span></div>
       <div class="stat-row"><span class="stat-label">Ants</span><span class="stat-val small" id="antsAlive">0</span></div>
       <div class="iter-bar"><div class="iter-fill" id="iterFill"></div></div>
@@ -137,6 +137,15 @@
         <div class="slider-label"><span>Def. mobility</span><span id="lblMob">3.0</span></div>
         <input type="range" id="slMob" min="0" max="8" step="0.5" value="3">
       </div>
+      <div class="slider-row">
+        <div class="slider-label"><span>Evaporation</span><span id="lblEvap">0.02</span></div>
+        <input type="range" id="slEvap" min="0.01" max="0.30" step="0.01" value="0.02">
+      </div>
+      <div class="btn-row">
+        <button class="btn-reset" onclick="applyPreset('aco')">ACO</button>
+        <button class="btn-reset" onclick="applyPreset('random')">Random</button>
+        <button class="btn-reset" onclick="applyPreset('heur')">Heuristic</button>
+      </div>
       <div class="btn-row">
         <button class="btn-run" id="btnRun" onclick="startSim()">▶ Run</button>
         <button class="btn-reset" onclick="resetSim()">↺ Reset</button>
@@ -159,7 +168,21 @@ const sliders = [
   ['slAlpha','lblAlpha',v=>parseFloat(v).toFixed(1)],
   ['slBeta','lblBeta',v=>parseFloat(v).toFixed(1)],
   ['slMob','lblMob',v=>parseFloat(v).toFixed(1)],
+  ['slEvap','lblEvap',v=>parseFloat(v).toFixed(2)],
 ];
+
+function applyPreset(name){
+  const presets = {
+    aco:    {alpha:2, beta:1},
+    random: {alpha:0, beta:0},
+    heur:   {alpha:0, beta:2},
+  };
+  const p = presets[name]; if(!p) return;
+  const a=document.getElementById('slAlpha'); a.value=p.alpha;
+  document.getElementById('lblAlpha').textContent=p.alpha.toFixed(1);
+  const b=document.getElementById('slBeta'); b.value=p.beta;
+  document.getElementById('lblBeta').textContent=p.beta.toFixed(1);
+}
 sliders.forEach(([id,lbl,fmt])=>{
   document.getElementById(id).addEventListener('input',()=>{
     document.getElementById(lbl).textContent = fmt(document.getElementById(id).value);
@@ -483,7 +506,7 @@ function drawChart(history,nIter){
 }
 
 function updateStats(s){
-  document.getElementById('bestXg').textContent=s.bestScore>0?s.bestScore.toFixed(3):'—';
+  document.getElementById('meanXg').textContent=s.meanXg>0?s.meanXg.toFixed(3):s.iteration>0?'0.000':'—';
   document.getElementById('iterNum').textContent=`${s.iteration} / ${s.nIter}`;
   document.getElementById('antsAlive').textContent=s.antTrails.length;
   document.getElementById('iterFill').style.width=(s.iteration/s.nIter*100)+'%';
@@ -508,6 +531,7 @@ function initSim(){
   const alpha   = parseFloat(document.getElementById('slAlpha').value);
   const beta    = parseFloat(document.getElementById('slBeta').value);
   const mobility= parseFloat(document.getElementById('slMob').value);
+  const evaporation = parseFloat(document.getElementById('slEvap').value);
 
   const players   = makePlayers(nAtk, nDef);
   const attackers = players.filter(p=>p.team==='offense');
@@ -524,8 +548,9 @@ function initSim(){
   allIds.forEach(i=>{ pheromone[i]={}; allIds.forEach(j=>{ pheromone[i][j]=1.0; }); });
 
   return { players,attackers,defenders,allIds,startPool,fixedStart,
-           nAnts,nIter,alpha,beta,mobility,
-           pheromone,iteration:0,bestPath:null,bestScore:0,history:[],antTrails:[] };
+           nAnts,nIter,alpha,beta,mobility,evaporation,
+           pheromone,iteration:0,bestPath:null,bestScore:0,
+           meanXg:0,history:[],antTrails:[] };
 }
 
 async function startSim(){
@@ -555,8 +580,12 @@ async function startSim(){
     });
 
     s.allIds.forEach(i=>s.allIds.forEach(j=>{
-      s.pheromone[i][j]=Math.max(0.01,s.pheromone[i][j]*0.9);
+      s.pheromone[i][j]=Math.max(0.01,s.pheromone[i][j]*(1-s.evaporation));
     }));
+
+    const meanThisIter = antScores.length
+      ? antScores.reduce((a,b)=>a+b,0)/antScores.length : 0;
+    s.meanXg = meanThisIter;
 
     antPaths.forEach((path,i)=>{
       const xg=antScores[i];
@@ -570,7 +599,7 @@ async function startSim(){
     });
 
     moveDefenders(s,s.bestPath,s.pheromone,s.mobility);
-    s.history.push(s.bestScore);
+    s.history.push(s.meanXg);
     s.antTrails=[];
     drawPitch(s); drawChart(s.history,s.nIter); updateStats(s);
     await sleep(60);
@@ -585,7 +614,7 @@ async function startSim(){
 function resetSim(){
   running=false; simState=null;
   document.getElementById('btnRun').disabled=false;
-  document.getElementById('bestXg').textContent='—';
+  document.getElementById('meanXg').textContent='—';
   document.getElementById('iterNum').textContent='0 / 0';
   document.getElementById('antsAlive').textContent='0';
   document.getElementById('iterFill').style.width='0%';
